@@ -1,0 +1,8 @@
+# Config file for AES like primitive
+---
+name: aeslike
+rounds: 4
+wordsize: 8
+branchnumber: 9
+statedimension: 8
+...

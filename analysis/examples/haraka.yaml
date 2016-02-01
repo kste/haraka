@@ -1,0 +1,16 @@
+# Config file for Haraka-512/256
+---
+name: haraka
+rounds: 5
+statedimension: 4
+branchnumber: 5
+wordsize: 8
+aesstates: 4
+aesrounds: 2
+collisiononly: Yes
+securitymodel: "truncated" # Count active S-boxes "sbox", 
+                           # Truncated model "truncated"
+attackerpower: 2 # Rounds the attacker can control in each direction
+mixlayer: "mix"  # Blend "blend"
+                   # Mix "mix"                    
+...
