@@ -55,6 +55,7 @@ def buildmodel(config):
     activesboxes = model.addVar(name="Active S-boxes")
     costs = model.addVar()
 
+
     model.update()
 
     # Objective to minimize attack costs
@@ -87,8 +88,10 @@ def buildmodel(config):
                 branch_number, aes_rounds)
 
         # Add MIX round constraints
-        if config["mixlayer"] == "mix":
-            model = addmixconstraints(model, config, var_x, rnd)
+        if config["mixlayer"] == "mix" and aes_states == 4:
+            model = addmixconstraints512(model, config, var_x, rnd)
+        elif config["mixlayer"] == "mix" and aes_states == 2:
+            model = addmixconstraints256(model, config, var_x, rnd)
 
 
     # No all Zero
@@ -184,7 +187,7 @@ def addtruncatedconstraints(model, config, var_x, var_mccosts, var_mcactive,
 
     # Count number of d.o.f.
     # Collision resistance
-    #model.addConstr(degoffree <= state_dim * state_dim * config["wordsize"] * 
+    # model.addConstr(degoffree <= state_dim * state_dim * config["wordsize"] * 
     #                config["aesstates"])
 
     # Second-preimage reistance
@@ -226,8 +229,6 @@ def addtruncatedconstraints(model, config, var_x, var_mccosts, var_mcactive,
                                               col, indices)
 
     # Find costs for controlled and uncontrolled rounds
-
-
     assert config["attackerstart"] in non_linear_rounds
     match_index = non_linear_rounds.index(config["attackerstart"])
 
@@ -246,9 +247,9 @@ def addtruncatedconstraints(model, config, var_x, var_mccosts, var_mcactive,
         for itrnd in active_rounds_nodof:
             mc_indices_nodof.append(state_dim*itrnd + i)
 
-    model.addConstr(quicksum(var_mccosts[j][i] for j in range(state_dim) 
+    model.addConstr(quicksum(var_mccosts[j][i] for j in range(config["aesstates"]) 
         for i in mc_indices) - costs_mc == 0, "MixColumns Costs Reducable")
-    model.addConstr(quicksum(var_mccosts[j][i] for j in range(state_dim) 
+    model.addConstr(quicksum(var_mccosts[j][i] for j in range(config["aesstates"]) 
         for i in mc_indices_nodof) - costs_mc_nodof == 0, "MixColumns Costs")
 
     return model
@@ -310,15 +311,23 @@ def addcollisionconstraints(model, config, var_x):
     """
     num_states = ((config["aesrounds"] + 1) * config["rounds"]) + 1
     state_dim = config["statedimension"]
+
     for aes_state in range(config["aesstates"]):
         for word in range(state_dim * state_dim):
             model.addConstr(var_x[aes_state][word] == 
-                            var_x[aes_state][word + num_states * 
+                            var_x[aes_state][word + (num_states - 1) * 
                             state_dim * state_dim], "collision")
+
+    if config["securitymodel"] == "truncated":
+        costs_collision = model.getVarByName("CollisionCosts")
+        model.addConstr(costs_collision - 
+                        quicksum(var_x[i][j] for i in range(config["aesstates"])
+                                 for j in range(state_dim * state_dim)) * 
+                        config["wordsize"] == 0, "inputdiff = outputdiff")            
 
     return model
 
-def addmixconstraints(model, config, var_x, current_round):
+def addmixconstraints512(model, config, var_x, current_round):
     """
     Adds the mix layer. Note that this layer is only defined if there
     are exactly four AES states.
@@ -346,6 +355,33 @@ def addmixconstraints(model, config, var_x, current_round):
                             var_x[idx // 4][new_col_start + word], "mix")
 
     return model
+
+def addmixconstraints256(model, config, var_x, current_round):
+    """
+    Adds the mix layer. Note that this layer is only defined if there
+    are exactly two AES states.
+    """
+    assert(config["aesstates"] == 2)
+
+    # Columnwise permutation
+    permutation = [0, 4, 1, 5,
+                   2, 6, 3, 7]
+
+    state_dim = config["statedimension"]
+    words_state = state_dim * state_dim
+    start_index = words_state * (config["aesrounds"] + current_round * 
+                 config["aesrounds"] + current_round)
+
+    next_index = 0
+
+    for idx, col in enumerate(permutation):
+        old_col_start = start_index + (col % state_dim) * state_dim
+        new_col_start = start_index + (idx % state_dim) * state_dim + words_state
+        for word in range(state_dim):
+            model.addConstr(var_x[col // 4][old_col_start + word] ==
+                            var_x[idx // 4][new_col_start + word], "mix")
+
+    return model    
 
 def addactivesboxconstraints(model, config, var_x, activesboxes):
     """

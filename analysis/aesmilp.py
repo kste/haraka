@@ -37,16 +37,20 @@ def findminactivesbox(config):
     Example which finds the minimum number of active S-boxes for AES like
     ciphers, with the parameters given in the config file.
     """
-    model = aeslike.buildmodel(config)
-    solved_model = solvemodel(model)
-    aeslike.printmodel(solved_model, config)
+    if config["name"] == "aeslike":
+        model = aeslike.buildmodel(config)
+        solved_model = solvemodel(model)
+        aeslike.printmodel(solved_model, config)
+    elif config["name"] == "haraka":
+        model = haraka.buildmodel(config)
+        solved_model = solvemodel(model)
+        haraka.printmodel(solved_model, config)
     return
 
 def harakatruncated(config):
     """
     Find best attack in our truncated model for Haraka.
     """
-
     num_states = ((config["aesrounds"] + 1) * config["rounds"]) + 1
 
     # Iterate over all possible starting states for the attack
