@@ -13,3 +13,10 @@ use in hash-based signature schemes like XMSS and SPHINCS.
 This repository provides a reference implementation and parts of the
 software used for the security analysis. For more information see
 our paper.
+
+## Reference
+
+Haraka - Efficient Short-Input Hashing for Post-Quantum Applications
+
+Stefan Kölbl and Martin M. Lauridsen and Florian Mendel and Christian Rechberger
+https://eprint.iacr.org/2016/098
