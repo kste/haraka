@@ -13,7 +13,28 @@ from gurobipy import *
 import yaml
 
 # Disable logging for gurobi on console
-setParam("LogToConsole", 0)
+setParam("LogToConsole", 1)
+
+def activesboxharaka():
+    config = {"rounds": 1,
+              "wordsize": 8,
+              "branchnumber": 5,
+              "statedimension": 4,
+              "aesstates": 4,
+              "aesrounds": 2,
+              "collisiononly": False,
+              "mixlayer": "mix",
+              "securitymodel": "sbox"}
+
+    print("Rounds", "S-boxes", sep="\t")
+    for num_rounds in range(1, 8):
+        print(num_rounds, end='')
+        for aes_rounds in range(1, 6):
+            config["rounds"] = num_rounds
+            config["aesrounds"] = aes_rounds
+            solved_model = solvemodel(haraka.buildmodel(config))
+            print(" ", round(solved_model.ObjVal), end="")
+        print("")
 
 def findminactiveincreasing():
     """
@@ -100,16 +121,23 @@ def main():
                         help="Count the number of active S-boxes.")
     parser.add_argument('--truncated', action="store_true", 
                         help="Use the truncated model for security analysis.")
+    parser.add_argument('--verb', nargs=1,
+                        help="Set verbosity of the Gurobi solver.")
     args = parser.parse_args()
 
     params = {}
+
+    #activesboxharaka()
+
+    if args.verb:
+        setParam("LogToConsole", int(args.verb[0]))
+
     if args.config:
         with open(args.config[0], 'r') as config:
             params = yaml.load(config)
 
     if args.sbox:
         findminactivesbox(params)
-        #findminactiveincreasing()
     
     if args.truncated:
         harakatruncated(params)

@@ -36,7 +36,7 @@ def buildmodel(config):
 
     for aes_state in range(aes_states):
         for word in range(num_states * words_state):
-            var_x[aes_state].append(
+            var_x[aes_state].append( 
                 model.addVar(vtype=GRB.BINARY,
                              name="x[{}][{}]".format(aes_state, word))
                 )
@@ -62,7 +62,7 @@ def buildmodel(config):
     model.setObjective(costs, GRB.MINIMIZE)
 
     if config["securitymodel"] == "sbox":
-        print("Finding minimum number of active S-boxes...")
+        # print("Finding minimum number of active S-boxes...")
         # Count number of active S-boxes
         model = addactivesboxconstraints(model, config, var_x, activesboxes)
         model.setObjective(activesboxes, GRB.MINIMIZE)
@@ -74,7 +74,7 @@ def buildmodel(config):
     if config["collisiononly"]:
         if aes_states == 4:
             # If we have 4 states truncated to 256-bit
-            model = addcolltruncoutput(model, config, var_x)
+            model = addcolltruncoutput512(model, config, var_x)
         else:
             model = addcollisionconstraints(model, config, var_x)
 
@@ -273,7 +273,7 @@ def addMCcostsfromindices(model, config, var_x, var_mccosts, var_mcactive,
                     "MixColumns costs")
     return model
 
-def addcolltruncoutput(model, config, var_x):
+def addcolltruncoutput512(model, config, var_x):
     """
     Add constrains that the trail must lead to a collision after truncation.
     """
@@ -303,7 +303,6 @@ def addcolltruncoutput(model, config, var_x):
                         config["wordsize"] == 0, "inputdiff = outputdiff")
 
     return model
-    
 
 def addcollisionconstraints(model, config, var_x):
     """
@@ -389,15 +388,38 @@ def addactivesboxconstraints(model, config, var_x, activesboxes):
     """
     sbox_indices = []
     num_states = (config["aesrounds"] + 1) * config["rounds"]
+    state_size = config["statedimension"] * config["statedimension"]
     for rnd in filter(lambda x: isAESround(x, config["aesrounds"]),
                       range(0, num_states)):
         words_state = config["statedimension"] * config["statedimension"]
         rnd_offset = rnd * words_state
         sbox_indices += [rnd_offset + word for word in range(words_state)]
 
-    model.addConstr(quicksum(var_x[aes_state][i] 
-                    for aes_state in range(config["aesstates"]) 
-                    for i in sbox_indices) - activesboxes == 0, 
+    sboxes = []
+
+    if config["aesstates"] == 4:
+        # Remove S-boxes which are truncated
+        trunc_indices = [0, 1, 5, 6, 10, 11, 12, 15]
+        trunc_indices_2 = [2, 3, 4, 7, 8, 9, 13, 14]
+
+        tmp_sbox_indices = [i for i in sbox_indices]
+        for idx in trunc_indices:
+            tmp_sbox_indices.remove(idx + (num_states - 2) * state_size)
+        for idx in tmp_sbox_indices:
+            sboxes.append(var_x[0][idx])
+            sboxes.append(var_x[2][idx])
+
+        tmp_sbox_indices = [i for i in sbox_indices]
+        for idx in trunc_indices_2:
+            tmp_sbox_indices.remove(idx + (num_states - 2) * state_size)
+        for idx in tmp_sbox_indices:
+            sboxes.append(var_x[1][idx])
+            sboxes.append(var_x[3][idx])
+    else:
+        sboxes = [var_x[aes_state][i] for aes_state in range(config["aesstates"]) 
+              for i in sbox_indices]
+
+    model.addConstr(quicksum(sboxes) - activesboxes == 0, 
                     "Count Active S-boxes")
 
     return model

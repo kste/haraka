@@ -22,7 +22,28 @@ S = [[0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0x
 	 [0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e],
 	 [0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf],
 	 [0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16]]
-	
+
+RC = [0x0684704ce620c00ab2c5fef075817b9d, 0x8b66b4e188f3a06b640f6ba42f08f717,
+	  0x3402de2d53f28498cf029d609f029114, 0x0ed6eae62e7b4f08bbf3bcaffd5b4f79,
+	  0xcbcfb0cb4872448b79eecd1cbe397044, 0x7eeacdee6e9032b78d5335ed2b8a057b,
+	  0x67c28f435e2e7cd0e2412761da4fef1b, 0x2924d9b0afcacc07675ffde21fc70b3b,
+	  0xab4d63f1e6867fe9ecdb8fcab9d465ee, 0x1c30bf84d4b7cd645b2a404fad037e33,
+	  0xb2cc0bb9941723bf69028b2e8df69800, 0xfa0478a6de6f55724aaa9ec85c9d2d8a,
+	  0xdfb49f2b6b772a120efa4f2e29129fd4, 0x1ea10344f449a23632d611aebb6a12ee,
+	  0xaf0449884b0500845f9600c99ca8eca6, 0x21025ed89d199c4f78a2c7e327e593ec,
+	  0xbf3aaaf8a759c9b7b9282ecd82d40173, 0x6260700d6186b01737f2efd910307d6b,
+	  0x5aca45c22130044381c29153f6fc9ac6, 0x9223973c226b68bb2caf92e836d1943a,
+	  0xd3bf9238225886eb6cbab958e51071b4, 0xdb863ce5aef0c677933dfddd24e1128d,
+	  0xbb606268ffeba09c83e48de3cb2212b1, 0x734bd3dce2e4d19c2db91a4ec72bf77d,
+	  0x43bb47c361301b434b1415c42cb3924e, 0xdba775a8e707eff603b231dd16eb6899,
+	  0x6df3614b3c7559778e5e23027eca472c, 0xcda75a17d6de7d776d1be5b9b88617f9,
+	  0xec6b43f06ba8e9aa9d6c069da946ee5d, 0xcb1e6950f957332ba25311593bf327c1,
+	  0x2cee0c7500da619ce4ed0353600ed0d9, 0xf0b1a5a196e90cab80bbbabc63a4a350,
+	  0xae3db1025e962988ab0dde30938dca39, 0x17bb8f38d554a40b8814f3a82e75b442,
+	  0x34bb8a5b5f427fd7aeb6b779360a16f6, 0x26f65241cbe5543843ce5918ffbaafde,
+	  0x4ce99a54b9f3026aa2ca9cf7839ec978, 0xae51a51a1bdff7be40c06e2822901235,
+	  0xa0c1613cba7ed22bc173bc0f48a659cf, 0x756acc03022882884ad6bdfde9c59da1]
+
 # get padded hex for single byte
 def hexbyte(x):
 	return hex(x)[2:].zfill(2)
@@ -83,13 +104,10 @@ def mixcolumns(s):
 	
 # AES single regular round	
 def aesenc(s, rk):
-	# s = subbytes(s[::-1])
 	s = subbytes(s)
 	s = shiftrows(s)
 	s = mixcolumns(s)
-	# s = xor(s, rk[::-1])
 	s = xor(s, rk[::-1])
-	# return s[::-1]
 	return s
 
 # consider 4 consecutive entries as 32-bit values and shift each of them to the left
@@ -110,6 +128,11 @@ def mix256(s):
 	return [s[0][0:4]  + s[1][0:4]  + s[0][4:8]   + s[1][4:8],
 			s[0][8:12] + s[1][8:12] + s[0][12:16] + s[1][12:16]]
 
+# convert RC to 16 words state
+def convRC(rc):
+	rcstr = hex(rc)[2:-1].zfill(32)
+	return [int(rcstr[i:i+2], 16) for i in range(0, 32, 2)]
+
 # Haraka-512/256
 def haraka512256(msg):
 	# obtain state from msg input and set initial rcon
@@ -123,8 +146,7 @@ def haraka512256(msg):
 	for t in range(ROUNDS):
 		# first we do AES_ROUNDS of AES rounds and update the round constant each time
 		for m in range(AES_ROUNDS):
-			s = [aesenc(s[i], rcon) for i in range(4)]
-			rcon = shift32(rcon)
+			s = [aesenc(s[i], convRC(RC[4*t*AES_ROUNDS + 4*m + i])) for i in range(4)]
 
 		print "= round %d : after aes layer ="%(t)
 		printstate(s)
@@ -160,7 +182,7 @@ def haraka256256(msg):
 	for t in range(ROUNDS):
 		# first we do AES_ROUNDS of AES rounds and update the round constant each time
 		for m in range(AES_ROUNDS):
-			s = [aesenc(s[i], rcon) for i in range(2)]
+			s = [aesenc(s[i], convRC(RC[2*t*AES_ROUNDS + 2*m + i])) for i in range(2)]
 			rcon = shift32(rcon)
 
 		print "= round %d : after aes layer ="%(t)
