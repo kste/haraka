@@ -20,11 +20,11 @@ void printbytes(unsigned char *m, int len) {
 	printf("%02x\n", m[len-1]);
 }
 
-void printstate512(__m128i a, __m128i b, __m128i c, __m128i d) {
-	uint8_t *A = (uint8_t*)&a;
-	uint8_t *B = (uint8_t*)&b;
-	uint8_t *C = (uint8_t*)&c;
-	uint8_t *D = (uint8_t*)&d;
+void printstate512(__m128i* s) {
+	uint8_t *A = (uint8_t*)(&s[0]);
+	uint8_t *B = (uint8_t*)(&s[1]);
+	uint8_t *C = (uint8_t*)(&s[2]);
+	uint8_t *D = (uint8_t*)(&s[3]);
 
 	int i;
 	for (i = 0; i < 4; ++i)
@@ -36,9 +36,9 @@ void printstate512(__m128i a, __m128i b, __m128i c, __m128i d) {
 	printf("\n");
 }
 
-void printstate256(__m128i a, __m128i b) {
-	uint8_t *A = (uint8_t*)&a;
-	uint8_t *B = (uint8_t*)&b;
+void printstate256(__m128i* s) {
+	uint8_t *A = (uint8_t*)(&s[0]);
+	uint8_t *B = (uint8_t*)(&s[1]);
 
 	int i;
 	for (i = 0; i < 4; ++i)

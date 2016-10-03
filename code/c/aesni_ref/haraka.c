@@ -63,7 +63,7 @@ int haraka512256(unsigned char *hash, const unsigned char *msg) {
     s[3] = _mm_load_si128(&((__m128i*)msg)[3]);
 
     printf("= input state =\n");
-    printstate512(s[0], s[1], s[2], s[3]);
+    printstate512(s);
 
     for (i = 0; i < ROUNDS; ++i) {
         // aes round(s)
@@ -75,7 +75,7 @@ int haraka512256(unsigned char *hash, const unsigned char *msg) {
         }
 
         printf("= round %d : after aes layer =\n", i);
-        printstate512(s[0], s[1], s[2], s[3]);
+        printstate512(s);
         
         // mixing
         tmp  = _mm_unpacklo_epi32(s[0], s[1]);
@@ -88,11 +88,11 @@ int haraka512256(unsigned char *hash, const unsigned char *msg) {
         s[1] = _mm_unpacklo_epi32(s[1],  tmp);
 
         printf("= round %d : after mix layer =\n", i);
-        printstate512(s[0], s[1], s[2], s[3]);
+        printstate512(s);
     }
 
     printf("= output from permutation =\n");
-    printstate512(s[0], s[1], s[2], s[3]);
+    printstate512(s);
 
     // xor message to get DM effect
     s[0] = _mm_xor_si128(s[0], _mm_load_si128(&((__m128i*)msg)[0]));
@@ -101,7 +101,7 @@ int haraka512256(unsigned char *hash, const unsigned char *msg) {
     s[3] = _mm_xor_si128(s[3], _mm_load_si128(&((__m128i*)msg)[3]));
 
     printf("= after feed-forward =\n");
-    printstate512(s[0], s[1], s[2], s[3]);
+    printstate512(s);
 
     // truncate and store result
     _mm_maskmoveu_si128(s[0], MSB64, (hash-8));
@@ -143,7 +143,7 @@ int haraka256256(unsigned char *hash, const unsigned char *msg) {
     s[1] = _mm_load_si128(&((__m128i*)msg)[1]);
 
     printf("= input state =\n");
-    printstate256(s[0], s[1]);
+    printstate256(s);
 
     for (i = 0; i < ROUNDS; ++i) {
         // aes round(s)
@@ -153,7 +153,7 @@ int haraka256256(unsigned char *hash, const unsigned char *msg) {
         }
 
         printf("= round %d : after aes layer =\n", i);
-        printstate256(s[0], s[1]);
+        printstate256(s);
         
         // mixing
         tmp = _mm_unpacklo_epi32(s[0], s[1]);
@@ -161,18 +161,18 @@ int haraka256256(unsigned char *hash, const unsigned char *msg) {
         s[0] = tmp;
 
         printf("= round %d : after mix layer =\n", i);
-        printstate256(s[0], s[1]);
+        printstate256(s);
     }
 
     printf("= output from permutation =\n");
-    printstate256(s[0], s[1]);
+    printstate256(s);
 
     // xor message to get DM effect
     s[0] = _mm_xor_si128(s[0], _mm_load_si128(&((__m128i*)msg)[0]));
     s[1] = _mm_xor_si128(s[1], _mm_load_si128(&((__m128i*)msg)[1]));
 
     printf("= after feed-forward =\n");
-    printstate256(s[0], s[1]);
+    printstate256(s);
 
     // store result
     _mm_storeu_si128((__m128i*)hash, s[0]);
