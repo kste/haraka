@@ -1,13 +1,13 @@
-# Haraka
+# Haraka v2
 
-Haraka is a secure and efficient hash function, designed specifically
+Haraka v2 is a secure and efficient hash function, designed specifically
 to process short inputs and be very fast on modern platforms which
 support AES-NI. One of the main applications for such a design is the 
 use in hash-based signature schemes like XMSS and SPHINCS.
 
 ## Features
 - Supports AES-NI
-- Low Latency
+- Low latency
 - High performance (below 1 cycle/byte on Skylake)
 
 This repository provides a reference implementation and parts of the
@@ -16,7 +16,7 @@ our paper.
 
 ## Reference
 
-Haraka - Efficient Short-Input Hashing for Post-Quantum Applications
+Haraka v2 - Efficient Short-Input Hashing for Post-Quantum Applications
 
 Stefan Kölbl and Martin M. Lauridsen and Florian Mendel and Christian Rechberger
 https://eprint.iacr.org/2016/098
