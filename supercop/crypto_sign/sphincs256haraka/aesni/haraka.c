@@ -1,5 +1,4 @@
 #include "haraka.h"
-#include "loop.h"
 #include <stdio.h>
 
 void load_constants() {
@@ -43,6 +42,7 @@ void load_constants() {
   rc[37] = _mm_set_epi32(0xae51a51a,0x1bdff7be,0x40c06e28,0x22901235);
   rc[38] = _mm_set_epi32(0xa0c1613c,0xba7ed22b,0xc173bc0f,0x48a659cf);
   rc[39] = _mm_set_epi32(0x756acc03,0x02288288,0x4ad6bdfd,0xe9c59da1);
+  #define CONSTANTSLOADED
 }
 
 void test_implementations() {
@@ -85,6 +85,9 @@ void test_implementations() {
 }
 
 void haraka256(unsigned char *out, const unsigned char *in) {
+  #ifndef CONSTANTSLOADED
+  load_constants();
+  #endif
   __m128i s[2], tmp;
 
   s[0] = LOAD(in);
@@ -113,6 +116,9 @@ void haraka256(unsigned char *out, const unsigned char *in) {
 }
 
 void haraka256_4x(unsigned char *out, const unsigned char *in) {
+  #ifndef CONSTANTSLOADED
+  load_constants();
+  #endif
   __m128i s[4][2], tmp;
 
   s[0][0] = LOAD(in);
@@ -185,125 +191,134 @@ void haraka256_4x(unsigned char *out, const unsigned char *in) {
 }
 
 void haraka256_8x(unsigned char *out, const unsigned char *in) {
-  __m128i s[8][2], tmp;
+  #ifndef CONSTANTSLOADED
+  load_constants();
+  #endif
+  haraka256_4x(out, in);
+  haraka256_4x(out + 128, in + 128);
 
-  int i;
-
-  s[0][0] = LOAD(in);
-  s[0][1] = LOAD(in + 16);
-  s[1][0] = LOAD(in + 32);
-  s[1][1] = LOAD(in + 48);
-  s[2][0] = LOAD(in + 64);
-  s[2][1] = LOAD(in + 80);
-  s[3][0] = LOAD(in + 96);
-  s[3][1] = LOAD(in + 112);
-  s[4][0] = LOAD(in + 128);
-  s[4][1] = LOAD(in + 144);
-  s[5][0] = LOAD(in + 160);
-  s[5][1] = LOAD(in + 176);
-  s[6][0] = LOAD(in + 192);
-  s[6][1] = LOAD(in + 208);
-  s[7][0] = LOAD(in + 224);
-  s[7][1] = LOAD(in + 240);
-
-  // Round 1
-  AES2_8x(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], 0);
-
-  MIX2(s[0][0], s[0][1]);
-  MIX2(s[1][0], s[1][1]);
-  MIX2(s[2][0], s[2][1]);
-  MIX2(s[3][0], s[3][1]);
-  MIX2(s[4][0], s[4][1]);
-  MIX2(s[5][0], s[5][1]);
-  MIX2(s[6][0], s[6][1]);
-  MIX2(s[7][0], s[7][1]);
-
-
-  // Round 2
-  AES2_8x(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], 4);
-
-  MIX2(s[0][0], s[0][1]);
-  MIX2(s[1][0], s[1][1]);
-  MIX2(s[2][0], s[2][1]);
-  MIX2(s[3][0], s[3][1]);
-  MIX2(s[4][0], s[4][1]);
-  MIX2(s[5][0], s[5][1]);
-  MIX2(s[6][0], s[6][1]);
-  MIX2(s[7][0], s[7][1]);
-
-  // Round 3
-  AES2_8x(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], 8);
-
-  MIX2(s[0][0], s[0][1]);
-  MIX2(s[1][0], s[1][1]);
-  MIX2(s[2][0], s[2][1]);
-  MIX2(s[3][0], s[3][1]);
-  MIX2(s[4][0], s[4][1]);
-  MIX2(s[5][0], s[5][1]);
-  MIX2(s[6][0], s[6][1]);
-  MIX2(s[7][0], s[7][1]);
-
-  // Round 4
-  AES2_8x(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], 12);
-
-  MIX2(s[0][0], s[0][1]);
-  MIX2(s[1][0], s[1][1]);
-  MIX2(s[2][0], s[2][1]);
-  MIX2(s[3][0], s[3][1]);
-  MIX2(s[4][0], s[4][1]);
-  MIX2(s[5][0], s[5][1]);
-  MIX2(s[6][0], s[6][1]);
-  MIX2(s[7][0], s[7][1]);
-
-  // Round 5
-  AES2_8x(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], 16);
-
-  MIX2(s[0][0], s[0][1]);
-  MIX2(s[1][0], s[1][1]);
-  MIX2(s[2][0], s[2][1]);
-  MIX2(s[3][0], s[3][1]);
-  MIX2(s[4][0], s[4][1]);
-  MIX2(s[5][0], s[5][1]);
-  MIX2(s[6][0], s[6][1]);
-  MIX2(s[7][0], s[7][1]);
-
-  // Feed Forward
-  s[0][0] = _mm_xor_si128(s[0][0], LOAD(in));
-  s[0][1] = _mm_xor_si128(s[0][1], LOAD(in + 16));
-  s[1][0] = _mm_xor_si128(s[1][0], LOAD(in + 32));
-  s[1][1] = _mm_xor_si128(s[1][1], LOAD(in + 48));
-  s[2][0] = _mm_xor_si128(s[2][0], LOAD(in + 64));
-  s[2][1] = _mm_xor_si128(s[2][1], LOAD(in + 80));
-  s[3][0] = _mm_xor_si128(s[3][0], LOAD(in + 96));
-  s[3][1] = _mm_xor_si128(s[3][1], LOAD(in + 112));
-  s[4][0] = _mm_xor_si128(s[4][0], LOAD(in + 128));
-  s[4][1] = _mm_xor_si128(s[4][1], LOAD(in + 144));
-  s[5][0] = _mm_xor_si128(s[5][0], LOAD(in + 160));
-  s[5][1] = _mm_xor_si128(s[5][1], LOAD(in + 176));
-  s[6][0] = _mm_xor_si128(s[6][0], LOAD(in + 192));
-  s[6][1] = _mm_xor_si128(s[6][1], LOAD(in + 208));
-  s[7][0] = _mm_xor_si128(s[7][0], LOAD(in + 224));
-  s[7][1] = _mm_xor_si128(s[7][1], LOAD(in + 240));
-
-  STORE(out, s[0][0]);
-  STORE(out + 16, s[0][1]);
-  STORE(out + 32, s[1][0]);
-  STORE(out + 48, s[1][1]);
-  STORE(out + 64, s[2][0]);
-  STORE(out + 80, s[2][1]);
-  STORE(out + 96, s[3][0]);
-  STORE(out + 112, s[3][1]);
-  STORE(out + 128, s[4][0]);
-  STORE(out + 144, s[4][1]);
-  STORE(out + 160, s[5][0]);
-  STORE(out + 176, s[5][1]);
-  STORE(out + 192, s[6][0]);
-  STORE(out + 208, s[6][1]);
-  STORE(out + 224, s[7][0]);
-  STORE(out + 240, s[7][1]);
+  // __m128i s[8][2], tmp;
+  //
+  // int i;
+  //
+  // s[0][0] = LOAD(in);
+  // s[0][1] = LOAD(in + 16);
+  // s[1][0] = LOAD(in + 32);
+  // s[1][1] = LOAD(in + 48);
+  // s[2][0] = LOAD(in + 64);
+  // s[2][1] = LOAD(in + 80);
+  // s[3][0] = LOAD(in + 96);
+  // s[3][1] = LOAD(in + 112);
+  // s[4][0] = LOAD(in + 128);
+  // s[4][1] = LOAD(in + 144);
+  // s[5][0] = LOAD(in + 160);
+  // s[5][1] = LOAD(in + 176);
+  // s[6][0] = LOAD(in + 192);
+  // s[6][1] = LOAD(in + 208);
+  // s[7][0] = LOAD(in + 224);
+  // s[7][1] = LOAD(in + 240);
+  //
+  // // Round 1
+  // AES2_8x(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], 0);
+  //
+  // MIX2(s[0][0], s[0][1]);
+  // MIX2(s[1][0], s[1][1]);
+  // MIX2(s[2][0], s[2][1]);
+  // MIX2(s[3][0], s[3][1]);
+  // MIX2(s[4][0], s[4][1]);
+  // MIX2(s[5][0], s[5][1]);
+  // MIX2(s[6][0], s[6][1]);
+  // MIX2(s[7][0], s[7][1]);
+  //
+  //
+  // // Round 2
+  // AES2_8x(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], 4);
+  //
+  // MIX2(s[0][0], s[0][1]);
+  // MIX2(s[1][0], s[1][1]);
+  // MIX2(s[2][0], s[2][1]);
+  // MIX2(s[3][0], s[3][1]);
+  // MIX2(s[4][0], s[4][1]);
+  // MIX2(s[5][0], s[5][1]);
+  // MIX2(s[6][0], s[6][1]);
+  // MIX2(s[7][0], s[7][1]);
+  //
+  // // Round 3
+  // AES2_8x(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], 8);
+  //
+  // MIX2(s[0][0], s[0][1]);
+  // MIX2(s[1][0], s[1][1]);
+  // MIX2(s[2][0], s[2][1]);
+  // MIX2(s[3][0], s[3][1]);
+  // MIX2(s[4][0], s[4][1]);
+  // MIX2(s[5][0], s[5][1]);
+  // MIX2(s[6][0], s[6][1]);
+  // MIX2(s[7][0], s[7][1]);
+  //
+  // // Round 4
+  // AES2_8x(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], 12);
+  //
+  // MIX2(s[0][0], s[0][1]);
+  // MIX2(s[1][0], s[1][1]);
+  // MIX2(s[2][0], s[2][1]);
+  // MIX2(s[3][0], s[3][1]);
+  // MIX2(s[4][0], s[4][1]);
+  // MIX2(s[5][0], s[5][1]);
+  // MIX2(s[6][0], s[6][1]);
+  // MIX2(s[7][0], s[7][1]);
+  //
+  // // Round 5
+  // AES2_8x(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], 16);
+  //
+  // MIX2(s[0][0], s[0][1]);
+  // MIX2(s[1][0], s[1][1]);
+  // MIX2(s[2][0], s[2][1]);
+  // MIX2(s[3][0], s[3][1]);
+  // MIX2(s[4][0], s[4][1]);
+  // MIX2(s[5][0], s[5][1]);
+  // MIX2(s[6][0], s[6][1]);
+  // MIX2(s[7][0], s[7][1]);
+  //
+  // // Feed Forward
+  // s[0][0] = _mm_xor_si128(s[0][0], LOAD(in));
+  // s[0][1] = _mm_xor_si128(s[0][1], LOAD(in + 16));
+  // s[1][0] = _mm_xor_si128(s[1][0], LOAD(in + 32));
+  // s[1][1] = _mm_xor_si128(s[1][1], LOAD(in + 48));
+  // s[2][0] = _mm_xor_si128(s[2][0], LOAD(in + 64));
+  // s[2][1] = _mm_xor_si128(s[2][1], LOAD(in + 80));
+  // s[3][0] = _mm_xor_si128(s[3][0], LOAD(in + 96));
+  // s[3][1] = _mm_xor_si128(s[3][1], LOAD(in + 112));
+  // s[4][0] = _mm_xor_si128(s[4][0], LOAD(in + 128));
+  // s[4][1] = _mm_xor_si128(s[4][1], LOAD(in + 144));
+  // s[5][0] = _mm_xor_si128(s[5][0], LOAD(in + 160));
+  // s[5][1] = _mm_xor_si128(s[5][1], LOAD(in + 176));
+  // s[6][0] = _mm_xor_si128(s[6][0], LOAD(in + 192));
+  // s[6][1] = _mm_xor_si128(s[6][1], LOAD(in + 208));
+  // s[7][0] = _mm_xor_si128(s[7][0], LOAD(in + 224));
+  // s[7][1] = _mm_xor_si128(s[7][1], LOAD(in + 240));
+  //
+  // STORE(out, s[0][0]);
+  // STORE(out + 16, s[0][1]);
+  // STORE(out + 32, s[1][0]);
+  // STORE(out + 48, s[1][1]);
+  // STORE(out + 64, s[2][0]);
+  // STORE(out + 80, s[2][1]);
+  // STORE(out + 96, s[3][0]);
+  // STORE(out + 112, s[3][1]);
+  // STORE(out + 128, s[4][0]);
+  // STORE(out + 144, s[4][1]);
+  // STORE(out + 160, s[5][0]);
+  // STORE(out + 176, s[5][1]);
+  // STORE(out + 192, s[6][0]);
+  // STORE(out + 208, s[6][1]);
+  // STORE(out + 224, s[7][0]);
+  // STORE(out + 240, s[7][1]);
 }
 
 void haraka512(unsigned char *out, const unsigned char *in) {
+  #ifndef CONSTANTSLOADED
+  load_constants();
+  #endif
   u128 s[4], tmp;
 
   s[0] = LOAD(in);
@@ -335,6 +350,9 @@ void haraka512(unsigned char *out, const unsigned char *in) {
 }
 
 void haraka512_4x(unsigned char *out, const unsigned char *in) {
+  #ifndef CONSTANTSLOADED
+  load_constants();
+  #endif
   u128 s[4][4], tmp;
 
   s[0][0] = LOAD(in);
@@ -409,6 +427,9 @@ void haraka512_4x(unsigned char *out, const unsigned char *in) {
 }
 
 void haraka512_8x(unsigned char *out, const unsigned char *in) {
+  #ifndef CONSTANTSLOADED
+  load_constants();
+  #endif
   // This is faster on Skylake, the code below is faster on Haswell.
   haraka512_4x(out, in);
   haraka512_4x(out + 128, in + 256);

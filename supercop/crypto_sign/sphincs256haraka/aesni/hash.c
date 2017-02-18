@@ -3,6 +3,7 @@
 #include "immintrin.h"
 #include "crypto_hash_blake256.h"
 #include "crypto_hash_blake512.h"
+#include "haraka.h"
 
 #include <stddef.h>
 #include <openssl/sha.h>

@@ -15,7 +15,7 @@
 #define BIGINT_BYTES ((TOTALTREE_HEIGHT-SUBTREE_HEIGHT+7)/8)
 
 #if (TOTALTREE_HEIGHT-SUBTREE_HEIGHT) > 64
-#error "TOTALTREE_HEIGHT-SUBTREE_HEIGHT must be at most 64" 
+#error "TOTALTREE_HEIGHT-SUBTREE_HEIGHT must be at most 64"
 #endif
 
 typedef struct{
@@ -54,7 +54,7 @@ static void get_seed(unsigned char seed[SEED_BYTES], const unsigned char *sk, co
 
   for(i=0;i<8;i++)
     buffer[SEED_BYTES+i] = (t >> 8*i) & 0xff;
-  
+
 #if SEED_BYTES != HASH_BYTES
 #error "Need to have SEED_BYTES == HASH_BYTES"
 #endif
@@ -75,8 +75,8 @@ static void get_seed(unsigned char seed[SEED_BYTES], const unsigned char *sk, co
     {
       memcpy(wots_pk+(l>>1)*HASH_BYTES,wots_pk+(l-1)*HASH_BYTES, HASH_BYTES);
       l=(l>>1)+1;
-    } 
-    else 
+    }
+    else
       l=(l>>1);
   }
   memcpy(leaf,wots_pk,HASH_BYTES);
@@ -99,8 +99,8 @@ static void l_tree(unsigned char *leaf, unsigned char *wots_pk, const unsigned c
     {
       memcpy(wots_pk+(l>>1)*HASH_BYTES,wots_pk+(l-1)*HASH_BYTES, HASH_BYTES);
       l=(l>>1)+1;
-    } 
-    else 
+    }
+    else
       l=(l>>1);
   }
   memcpy(leaf,wots_pk,HASH_BYTES);
@@ -114,7 +114,7 @@ static void l_tree_8x(unsigned char *leaf, unsigned char *wots_pk, const unsigne
   for(i=0;i<WOTS_LOG_L;i++)
   {
     for(j = 0;j < (l>>1);j++)
-      hash_2n_n_mask_8x(wots_pk+j*HASH_BYTES, wots_pk+j*2*HASH_BYTES, 
+      hash_2n_n_mask_8x(wots_pk+j*HASH_BYTES, wots_pk+j*2*HASH_BYTES,
           WOTS_L*HASH_BYTES, WOTS_L*HASH_BYTES,
           masks+i*2*HASH_BYTES);
     if(l&1)
@@ -139,7 +139,7 @@ static void gen_leaf_wots(unsigned char leaf[HASH_BYTES], const unsigned char *m
   get_seed(seed, sk, a);
   wots_pkgen(pk, seed, masks);
 
-  l_tree(leaf, pk, masks); 
+  l_tree(leaf, pk, masks);
 }
 
 
@@ -155,7 +155,7 @@ static void treehash(unsigned char *node, int height, const unsigned char *sk, c
 
   lastnode = a.subleaf+(1<<height);
 
-  for(;a.subleaf<lastnode;a.subleaf++) 
+  for(;a.subleaf<lastnode;a.subleaf++)
   {
     gen_leaf_wots(stack+stackoffset*HASH_BYTES,masks,sk,&a);
     stacklevels[stackoffset] = 0;
@@ -243,7 +243,7 @@ static void compute_authpath_wots(unsigned char root[HASH_BYTES], unsigned char 
   for (i = (1<<SUBTREE_HEIGHT); i > 0; i>>=1)
   {
     for (j = 0; j < i; j+=2)
-      hash_2n_n_mask(tree + (i>>1)*HASH_BYTES + (j>>1) * HASH_BYTES, 
+      hash_2n_n_mask(tree + (i>>1)*HASH_BYTES + (j>>1) * HASH_BYTES,
           tree + i*HASH_BYTES + j * HASH_BYTES,
           masks+2*(WOTS_LOG_L + level)*HASH_BYTES);
 
@@ -375,7 +375,7 @@ int crypto_sign(unsigned char *sm,unsigned long long *smlen, const unsigned char
 
   sm += horst_sigbytes;
   *smlen += horst_sigbytes;
-  
+
   for(i=0;i<N_LEVELS;i++)
   {
     a.level = i;
@@ -388,7 +388,7 @@ int crypto_sign(unsigned char *sm,unsigned long long *smlen, const unsigned char
     compute_authpath_wots(root,sm,&a,tsk,masks,SUBTREE_HEIGHT);
     sm += SUBTREE_HEIGHT*HASH_BYTES;
     *smlen += SUBTREE_HEIGHT*HASH_BYTES;
-    
+
     a.subleaf = a.subtree & ((1<<SUBTREE_HEIGHT)-1);
     a.subtree >>= SUBTREE_HEIGHT;
   }
@@ -454,12 +454,12 @@ int crypto_sign_open(unsigned char *m,unsigned long long *mlen, const unsigned c
     leafidx ^= (((unsigned long long)sigp[i]) << 8*i);
 
 
-  horst_verify(root, sigp+(TOTALTREE_HEIGHT+7)/8, 
+  horst_verify(root, sigp+(TOTALTREE_HEIGHT+7)/8,
       sigp+CRYPTO_BYTES-MESSAGE_HASH_SEED_BYTES, smlen-CRYPTO_BYTES-MESSAGE_HASH_SEED_BYTES, tpk, m_h);
 
   sigp += (TOTALTREE_HEIGHT+7)/8;
   smlen -= (TOTALTREE_HEIGHT+7)/8;
-  
+
   sigp += HORST_SIGBYTES;
   smlen -= HORST_SIGBYTES;
 
@@ -471,7 +471,7 @@ int crypto_sign_open(unsigned char *m,unsigned long long *mlen, const unsigned c
     smlen -= WOTS_SIGBYTES;
 
     l_tree(pkhash, wots_pk,tpk);
-    validate_authpath(root, pkhash, leafidx & 0x1f, sigp, tpk, SUBTREE_HEIGHT);  
+    validate_authpath(root, pkhash, leafidx & 0x1f, sigp, tpk, SUBTREE_HEIGHT);
     leafidx >>= 5;
 
     sigp += SUBTREE_HEIGHT*HASH_BYTES;
@@ -481,14 +481,14 @@ int crypto_sign_open(unsigned char *m,unsigned long long *mlen, const unsigned c
   for(i=0;i<HASH_BYTES;i++)
     if(root[i] != tpk[i+N_MASKS*HASH_BYTES])
       goto fail;
-  
+
   *mlen = smlen;
   for(i=0;i<*mlen;i++)
     m[i] = m[i+MESSAGE_HASH_SEED_BYTES+CRYPTO_PUBLICKEYBYTES];
 
   return 0;
-  
-  
+
+
 fail:
   *mlen = smlen;
   for(i=0;i<*mlen;i++)
@@ -496,4 +496,3 @@ fail:
   *mlen = -1;
   return -1;
 }
-
