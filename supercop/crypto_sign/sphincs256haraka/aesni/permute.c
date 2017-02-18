@@ -43,7 +43,7 @@ void chacha_permute(unsigned char out[64],const unsigned char in [64])
     x[i] |= in[4*i+0];
   }
 
-  for (i = CHACHA_ROUNDS;i > 0;i -= 2) 
+  for (i = CHACHA_ROUNDS;i > 0;i -= 2)
   {
     QUARTERROUND( 0, 4, 8,12)
     QUARTERROUND( 1, 5, 9,13)
@@ -56,7 +56,7 @@ void chacha_permute(unsigned char out[64],const unsigned char in [64])
   }
 
 //  for (i = 0;i < 16;++i) x[i] = PLUS(x[i],input[i]); // XXX: Bad idea if we later xor the input to the state?
-  for (i = 0;i < 16;++i) 
+  for (i = 0;i < 16;++i)
   {
     out[4*i]   =  x[i] & 0xff;
     out[4*i+1] = (x[i] >>  8) & 0xff;
@@ -137,7 +137,7 @@ void haraka512256(unsigned char out[32], const unsigned char in[64]) {
         s[3] = _mm_unpackhi_epi32(s[2], s[0]); \
         s[0] = _mm_unpacklo_epi32(s[2], s[0]); \
         s[2] = _mm_unpacklo_epi32(tmp,  s[1]); \
-        s[1] = _mm_unpackhi_epi32(tmp,  s[1]);        
+        s[1] = _mm_unpackhi_epi32(tmp,  s[1]);
 /*        tmp  = _mm_unpacklo_epi32(s[0], s[1]);
         s[0] = _mm_unpackhi_epi32(s[0], s[1]);
         s[1] = _mm_unpacklo_epi32(s[2], s[3]);
@@ -162,7 +162,7 @@ void haraka512256(unsigned char out[32], const unsigned char in[64]) {
     _mm_storel_epi64((__m128i*)(out + 0),  s[0]); \
     _mm_storel_epi64((__m128i*)(out + 8),  s[1]); \
     _mm_storel_epi64((__m128i*)(out + 16), s[2]); \
-    _mm_storel_epi64((__m128i*)(out + 24), s[3]);    
+    _mm_storel_epi64((__m128i*)(out + 24), s[3]);
 }
 
 void haraka256256(unsigned char out[32], const unsigned char in[32]) {
@@ -203,7 +203,7 @@ void haraka256256(unsigned char out[32], const unsigned char in[32]) {
             s[1] = _mm_aesenc_si128(s[1], rc[2*AES_PER_ROUND*i + 2*j + 1]);
             rcon = _mm_slli_epi32(rcon, 1);
         }
-        
+
         // mixing
         tmp = _mm_unpacklo_epi32(s[0], s[1]);
         s[1] = _mm_unpackhi_epi32(s[0], s[1]);
@@ -331,14 +331,14 @@ void haraka256256_8x(unsigned char out[32*8], const unsigned char in[32*8])
     s[n][1] = _mm_unpackhi_epi32(s[n][0], s[n][1]); \
     s[n][0] = tmp[n];
     REPEAT_THIS(8);
-            
+
     // xor message to get DM effect
     #undef TIMES0
     #define TIMES0(n) \
         s[n][0] = _mm_xor_si128(s[n][0], _mm_load_si128(&((__m128i*)(in + n*32))[0])); \
         s[n][1] = _mm_xor_si128(s[n][1], _mm_load_si128(&((__m128i*)(in + n*32))[1]));
     REPEAT_THIS(8);
-    
+
     #undef TIMES0
     #define TIMES0(n) \
         _mm_storeu_si128((__m128i*)(out + n*32 + 0),  s[n][0]); \
@@ -346,7 +346,7 @@ void haraka256256_8x(unsigned char out[32*8], const unsigned char in[32*8])
     REPEAT_THIS(8);
 }
 
-void haraka512256_8x(unsigned char out[32*8], const unsigned char in[64*8]) 
+void haraka512256_8x(unsigned char out[32*8], const unsigned char in[64*8])
 {
     // stuff we need
     int i, j;
@@ -527,7 +527,7 @@ void haraka512256_8x(unsigned char out[32*8], const unsigned char in[64*8])
     s[n][2] = _mm_unpacklo_epi32(tmp[n],  s[n][1]); \
     s[n][1] = _mm_unpackhi_epi32(tmp[n],  s[n][1]);
     REPEAT_THIS(8);
-    
+
     // xor message to get DM effect
     #undef TIMES0
     #define TIMES0(n) \
@@ -536,7 +536,7 @@ void haraka512256_8x(unsigned char out[32*8], const unsigned char in[64*8])
         s[n][2] = _mm_xor_si128(s[n][2], _mm_load_si128(&((__m128i*)(in + n*64))[2])); \
         s[n][3] = _mm_xor_si128(s[n][3], _mm_load_si128(&((__m128i*)(in + n*64))[3]));
     REPEAT_THIS(8);
-    
+
     #undef TIMES0
     #define TIMES0(n) \
         _mm_storel_epi64((__m128i*)(out + n*32 + 0),  s[n][0]); \

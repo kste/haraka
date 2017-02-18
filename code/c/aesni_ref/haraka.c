@@ -76,7 +76,7 @@ int haraka512256(unsigned char *hash, const unsigned char *msg) {
 
         printf("= round %d : after aes layer =\n", i);
         printstate512(s[0], s[1], s[2], s[3]);
-        
+
         // mixing
         tmp  = _mm_unpacklo_epi32(s[0], s[1]);
         s[0] = _mm_unpackhi_epi32(s[0], s[1]);
@@ -113,8 +113,7 @@ int haraka512256(unsigned char *hash, const unsigned char *msg) {
 int haraka256256(unsigned char *hash, const unsigned char *msg) {
     // stuff we need
     int i, j;
-    __m128i s[2], tmp, rcon, rc[20];
-    __m128i MSB64 = _mm_set_epi32(0xFFFFFFFF,0xFFFFFFFF,0,0);
+    __m128i s[2], tmp, rc[20];
 
     // define round constants
     rc[0] = _mm_set_epi32(0x0684704c,0xe620c00a,0xb2c5fef0,0x75817b9d);
@@ -154,7 +153,7 @@ int haraka256256(unsigned char *hash, const unsigned char *msg) {
 
         printf("= round %d : after aes layer =\n", i);
         printstate256(s[0], s[1]);
-        
+
         // mixing
         tmp = _mm_unpacklo_epi32(s[0], s[1]);
         s[1] = _mm_unpackhi_epi32(s[0], s[1]);
@@ -197,15 +196,15 @@ int main() {
     haraka512256(digest, msg);
 
     // print output
-    printf("= haraka-512/256 output bytes =\n"); 
+    printf("= haraka-512/256 output bytes =\n");
     printbytes(digest, 32); printf("\n");
 
     // run Haraka-256/256
     haraka256256(digest, msg);
 
     // print output
-    printf("= haraka-256/256 output bytes =\n"); 
+    printf("= haraka-256/256 output bytes =\n");
     printbytes(digest, 32); printf("\n");
 
-    return 0;   
+    return 0;
 }

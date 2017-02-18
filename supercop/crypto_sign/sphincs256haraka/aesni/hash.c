@@ -36,7 +36,7 @@ int hash_2n_n(unsigned char *out,const unsigned char *in)
   {
     x[i] = in[i];
   }
-  haraka512256(out,x);
+  haraka512(out,x);
 
   return 0;
 }
@@ -62,7 +62,7 @@ int hash_n_n(unsigned char *out,const unsigned char *in)
   {
     x[i]    = in[i];
   }
-  haraka256256(out,x);
+  haraka256(out,x);
 
   return 0;
 }
@@ -76,7 +76,7 @@ int hash_n_n_mask(unsigned char *out,const unsigned char *in, const unsigned cha
   return hash_n_n(out, buf);
 }
 
-int hash_n_n_mask_8x(unsigned char *out,const unsigned char *in, 
+int hash_n_n_mask_8x(unsigned char *out,const unsigned char *in,
                      const unsigned char *mask)
 {
   unsigned char x[32*8];
@@ -88,17 +88,17 @@ int hash_n_n_mask_8x(unsigned char *out,const unsigned char *in,
   {
     _mm256_store_si256(x + 32*i, _mm256_xor_si256(_mm256_load_si256(in + 32*i), fullmask));
   }
-  
-  haraka256256_8x(out, x);
+
+  haraka256_8x(out, x);
 }
 
-int hash_2n_n_8x(unsigned char *out,const unsigned char *in, 
+int hash_2n_n_8x(unsigned char *out,const unsigned char *in,
       unsigned long long out_dist, unsigned long long in_dist)
 {
-  haraka512256_8x(out, in);
-}
+  haraka512_8x(out, in);
 
-int hash_2n_n_mask_8x(unsigned char *out,const unsigned char *in, 
+}
+int hash_2n_n_mask_8x(unsigned char *out,const unsigned char *in,
       unsigned long long out_dist, unsigned long long in_dist,
       const unsigned char *mask)
 {
@@ -111,10 +111,9 @@ int hash_2n_n_mask_8x(unsigned char *out,const unsigned char *in,
   for(i=0;i<8;i++)
   {
     _mm256_store_si256(x + 64*i, _mm256_xor_si256(_mm256_load_si256(in + 64*i), mask_a));
-    _mm256_store_si256(x + 64*i + 32, _mm256_xor_si256(_mm256_load_si256(in + 64*i + 32), mask_b));    
+    _mm256_store_si256(x + 64*i + 32, _mm256_xor_si256(_mm256_load_si256(in + 64*i + 32), mask_b));
   }
-
-  haraka512256_8x(out, x);
+  haraka512_8x(out, x);
 }
 
 int loop_hash_2n_n_mask_8x(unsigned char *out,const unsigned char *in,
@@ -126,7 +125,7 @@ int loop_hash_2n_n_mask_8x(unsigned char *out,const unsigned char *in,
                       HASH_BYTES, 2*HASH_BYTES, mask);
 }
 
-int hash_n_n_8x(unsigned char *out,const unsigned char *in) 
+int hash_n_n_8x(unsigned char *out,const unsigned char *in)
 {
-  haraka256256_8x(out, in);
+  haraka256_8x(out, in);
 }
