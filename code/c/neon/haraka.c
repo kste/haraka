@@ -50,36 +50,36 @@ void print_uint8(u128 v, const unsigned char *name) {
 }
 
 
-void haraka256(unsigned char *out, const unsigned char *in); //{
-//   u128 s[2], tmp;
-//
-//   s[0] = LOAD(in);
-//   s[1] = LOAD(in + 16);
-//
-//   AES2(s[0], s[1], 0);
-//   MIX2(s[0], s[1]);
-//
-//   AES2(s[0], s[1], 4);
-//   MIX2(s[0], s[1]);
-//
-//   AES2(s[0], s[1], 8);
-//   MIX2(s[0], s[1]);
-//
-//   AES2(s[0], s[1], 12);
-//   MIX2(s[0], s[1]);
-//
-//   AES2(s[0], s[1], 16);
-//   s[0] = XOR(s[0], rc256[20]);
-//   s[1] = XOR(s[1], rc256[21]);
-//
-//   MIX2(s[0], s[1]);
-//
-//   s[0] = XOR(s[0], LOAD(in));
-//   s[1] = XOR(s[1], LOAD(in + 16));
-//
-//   STORE(out, s[0]);
-//   STORE(out + 16, s[1]);
-// }
+void haraka256(unsigned char *out, const unsigned char *in) {
+  u128 s[2], tmp;
+
+  s[0] = LOAD(in);
+  s[1] = LOAD(in + 16);
+
+  AES2(s[0], s[1], 0);
+  MIX2(s[0], s[1]);
+
+  AES2(s[0], s[1], 4);
+  MIX2(s[0], s[1]);
+
+  AES2(s[0], s[1], 8);
+  MIX2(s[0], s[1]);
+
+  AES2(s[0], s[1], 12);
+  MIX2(s[0], s[1]);
+
+  AES2(s[0], s[1], 16);
+  s[0] = XOR(s[0], rc256[20]);
+  s[1] = XOR(s[1], rc256[21]);
+
+  MIX2(s[0], s[1]);
+
+  s[0] = XOR(s[0], LOAD(in));
+  s[1] = XOR(s[1], LOAD(in + 16));
+
+  STORE(out, s[0]);
+  STORE(out + 16, s[1]);
+}
 
 void haraka256_4x(unsigned char *out, const unsigned char *in) {
   u128 s[4][2], tmp;
